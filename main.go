@@ -1,21 +1,27 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"runtime"
-	"syscall"
-
 	"github.com/Dreamacro/clash/config"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/hub"
 	"github.com/Dreamacro/clash/hub/executor"
 	"github.com/Dreamacro/clash/log"
-
+	. "github.com/r3inbowari/zlog"
 	"go.uber.org/automaxprocs/maxprocs"
+	"golang.org/x/sys/windows/registry"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"syscall"
+	"time"
+	"unsafe"
 )
 
 var (
@@ -45,7 +51,94 @@ func init() {
 	})
 }
 
+type Result struct {
+	API  string   `json:"api"`
+	V    string   `json:"v"`
+	Ret  []string `json:"ret"`
+	Data Data     `json:"data"`
+}
+
+type Data struct {
+	T string `json:"t"`
+}
+
+func getTime() *Result {
+	url := "http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp"
+	method := "GET"
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	var ret Result
+	err = json.Unmarshal(body, &ret)
+	if err != nil {
+		println(err.Error())
+		return nil
+	}
+	return &ret
+}
+
+func setTitle(title string) {
+	kernel32, _ := syscall.LoadLibrary(`kernel32.dll`)
+	sct, _ := syscall.GetProcAddress(kernel32, `SetConsoleTitleW`)
+	syscall.Syscall(sct, 1, uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(title))), 0, 0)
+	syscall.FreeLibrary(kernel32)
+}
+
 func main() {
+	setTitle("Clash for Windows v1.8.0")
+
+	InitUpdate("2021.12.20 22:10:13", "server", "v1.8.0", "cb0dc838e04e841f193f383e06e9d25a534c5809", "1", "8", "0", "meiwobuxing", nil)
+	InitGlobalLogger().SetScreen(true)
+	time.Sleep(time.Second)
+
+	Log.Blue("   _     _      _     _      _     _      _     _      _     _   ")
+	Log.Blue("  (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)          PACKAGER #UNOFFICIAL " + Up.ReleaseTag[:7] + "..." + Up.ReleaseTag[33:])
+	Log.Blue("   / ._. \\      / ._. \\      / ._. \\      / ._. \\      / ._. \\            -... .. .-.. .. -.-. --- .. -. " + Up.VersionStr)
+	Log.Blue(" __\\( Y )/__  __\\( Y )/__  __\\( Y )/__  __\\( Y )/__  __\\( Y )/__         Running: CLI Server" + " by cyt(r3inbowari)")
+	Log.Blue("(_.-/'-'\\-._)(_.-/'-'\\-._)(_.-/'-'\\-._)(_.-/'-'\\-._)(_.-/'-'\\-._)        Listened: 6564")
+	Log.Blue("   || C ||      || L ||      || A ||      || S ||      || H ||           PID: " + strconv.Itoa(os.Getpid()))
+	Log.Blue(" _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._         Built: " + Up.BuildTime)
+	Log.Blue("(.-./`-'\\.-.)(.-./`-'\\.-.)(.-./`-'\\.-.)(.-./`-`\\.-.)(.-./`-'\\.-.)")
+	Log.Blue(" `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-' ")
+
+	// Auth(true)
+
+	t := getTime()
+	if t == nil {
+		return
+	}
+
+	it, err := strconv.ParseInt(t.Data.T, 10, 64)
+	if err != nil {
+		return
+	}
+
+	//if it > 1641312000000 {
+	if it > 1640429981000 {
+		Log.WithTag("[HUB]").Warn("Clash 授权已到期")
+		time.Sleep(time.Minute)
+		return
+	}
+
 	maxprocs.Set(maxprocs.Logger(func(string, ...interface{}) {}))
 	if version {
 		fmt.Printf("Clash %s %s %s with %s %s\n", C.Version, runtime.GOOS, runtime.GOARCH, runtime.Version(), C.BuildTime)
@@ -100,7 +193,16 @@ func main() {
 		log.Fatalln("Parse config error: %s", err.Error())
 	}
 
+	key, _, _ := registry.CreateKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Internet Settings`, registry.ALL_ACCESS)
+	key.SetDWordValue("ProxyEnable", 1)
+	key.SetStringValue("ProxyOverride", "localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;192.168.*;<local>")
+	key.SetStringValue("ProxyServer", "127.0.0.1:7890")
+	Log.WithTag("MAIN").Info("open global proxy on windows setting")
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
+	defer key.Close()
+	Log.WithTag("MAIN").Info("close global proxy on windows setting")
+	time.Sleep(time.Second)
+	key.SetDWordValue("ProxyEnable", 0)
 }

@@ -5,8 +5,8 @@ import (
 
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
-
 	"github.com/oschwald/geoip2-golang"
+	. "github.com/r3inbowari/zlog"
 )
 
 var (
@@ -26,6 +26,7 @@ func LoadFromBytes(buffer []byte) {
 
 func Verify() bool {
 	instance, err := geoip2.Open(C.Path.MMDB())
+	Log.WithTag("MMDB").WithField("epoch", instance.Metadata().BuildEpoch).Info("mmdb verify")
 	if err == nil {
 		instance.Close()
 	}

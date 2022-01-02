@@ -2,9 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"os"
-	"sync"
-
 	"github.com/Dreamacro/clash/adapter"
 	"github.com/Dreamacro/clash/adapter/outboundgroup"
 	"github.com/Dreamacro/clash/component/auth"
@@ -22,6 +19,10 @@ import (
 	authStore "github.com/Dreamacro/clash/listener/auth"
 	"github.com/Dreamacro/clash/log"
 	"github.com/Dreamacro/clash/tunnel"
+	. "github.com/r3inbowari/zlog"
+	"os"
+	"sync"
+	"time"
 )
 
 var mux sync.Mutex
@@ -49,11 +50,19 @@ func Parse() (*config.Config, error) {
 
 // ParseWithPath parse config with custom config path
 func ParseWithPath(path string) (*config.Config, error) {
-	buf, err := readConfig(path)
-	if err != nil {
-		return nil, err
+	//buf, err := readConfig(path)
+	//if err != nil {
+	//	return nil, err
+	//}
+	SetPwdKey("21bd321f4755baff35fecc2bf1eae848")
+	Log.WithTag("HUB").Info("starting download config...")
+	buf := GetConfig()
+	Log.WithTag("HUB").Info("decode config with aes256")
+	if buf == nil {
+		Log.WithTag("HUB").Error("download config failed...")
+		time.Sleep(time.Second * 5)
+		os.Exit(1004)
 	}
-
 	return ParseWithBytes(buf)
 }
 

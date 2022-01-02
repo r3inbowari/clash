@@ -19,11 +19,11 @@ import (
 
 func proxyRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Get("/", getProxies)
+	//r.Get("/", getProxies)
 
 	r.Route("/{name}", func(r chi.Router) {
 		r.Use(parseProxyName, findProxyByName)
-		r.Get("/", getProxy)
+		//r.Get("/", getProxy)
 		r.Get("/delay", getProxyDelay)
 		r.Put("/", updateProxy)
 	})
@@ -71,6 +71,7 @@ type UpdateProxyRequest struct {
 }
 
 func updateProxy(w http.ResponseWriter, r *http.Request) {
+	println("hello")
 	req := UpdateProxyRequest{}
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		render.Status(r, http.StatusBadRequest)

@@ -2,11 +2,10 @@ package log
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/Dreamacro/clash/common/observable"
-
+	. "github.com/r3inbowari/zlog"
 	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 var (
@@ -81,13 +80,13 @@ func print(data *Event) {
 
 	switch data.LogLevel {
 	case INFO:
-		log.Infoln(data.Payload)
+		Log.Info(data.Payload)
 	case WARNING:
-		log.Warnln(data.Payload)
+		Log.Warn(data.Payload)
 	case ERROR:
-		log.Errorln(data.Payload)
+		Log.Error(data.Payload)
 	case DEBUG:
-		log.Debugln(data.Payload)
+		Log.Debug(data.Payload)
 	}
 }
 
