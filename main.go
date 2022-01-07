@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/Dreamacro/clash/config"
@@ -9,11 +8,10 @@ import (
 	"github.com/Dreamacro/clash/hub"
 	"github.com/Dreamacro/clash/hub/executor"
 	"github.com/Dreamacro/clash/log"
+	"github.com/r3inbowari/common"
 	. "github.com/r3inbowari/zlog"
 	"go.uber.org/automaxprocs/maxprocs"
 	"golang.org/x/sys/windows/registry"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -21,7 +19,6 @@ import (
 	"strconv"
 	"syscall"
 	"time"
-	"unsafe"
 )
 
 var (
@@ -51,93 +48,29 @@ func init() {
 	})
 }
 
-type Result struct {
-	API  string   `json:"api"`
-	V    string   `json:"v"`
-	Ret  []string `json:"ret"`
-	Data Data     `json:"data"`
-}
-
-type Data struct {
-	T string `json:"t"`
-}
-
-func getTime() *Result {
-	url := "http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp"
-	method := "GET"
-
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
-
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-
-	var ret Result
-	err = json.Unmarshal(body, &ret)
-	if err != nil {
-		println(err.Error())
-		return nil
-	}
-	return &ret
-}
-
-func setTitle(title string) {
-	kernel32, _ := syscall.LoadLibrary(`kernel32.dll`)
-	sct, _ := syscall.GetProcAddress(kernel32, `SetConsoleTitleW`)
-	syscall.Syscall(sct, 1, uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(title))), 0, 0)
-	syscall.FreeLibrary(kernel32)
-}
-
 func main() {
-	setTitle("Clash for Windows v1.8.0")
+	if runtime.GOOS == "windows" {
+		_ = common.SetCmdTitle("Clash for Windows v1.9.0")
+	}
 
-	InitUpdate("2021.12.20 22:10:13", "server", "v1.8.0", "cb0dc838e04e841f193f383e06e9d25a534c5809", "1", "8", "0", "meiwobuxing", nil)
 	InitGlobalLogger().SetScreen(true)
-	time.Sleep(time.Second)
+
+	p := common.InitPermClient(common.PermOptions{
+		Log:         &Log.Logger,
+		CheckSource: "https://1077739472743245.cn-hangzhou.fc.aliyuncs.com/2016-08-15/proxy/perm.LATEST/perm",
+		AppId:       "ef3d84021a", ExpireAfter: time.Hour * 168,
+	})
+	p.Verify()
 
 	Log.Blue("   _     _      _     _      _     _      _     _      _     _   ")
-	Log.Blue("  (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)          PACKAGER #UNOFFICIAL " + Up.ReleaseTag[:7] + "..." + Up.ReleaseTag[33:])
-	Log.Blue("   / ._. \\      / ._. \\      / ._. \\      / ._. \\      / ._. \\            -... .. .-.. .. -.-. --- .. -. " + Up.VersionStr)
+	Log.Blue("  (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)    (c).-.(c)          PACKAGER #UNOFFICIAL " + "c4f7d8e...d93a5f2")
+	Log.Blue("   / ._. \\      / ._. \\      / ._. \\      / ._. \\      / ._. \\            -... .. .-.. .. -.-. --- .. -. v1.9.0")
 	Log.Blue(" __\\( Y )/__  __\\( Y )/__  __\\( Y )/__  __\\( Y )/__  __\\( Y )/__         Running: CLI Server" + " by cyt(r3inbowari)")
 	Log.Blue("(_.-/'-'\\-._)(_.-/'-'\\-._)(_.-/'-'\\-._)(_.-/'-'\\-._)(_.-/'-'\\-._)        Listened: 6564")
 	Log.Blue("   || C ||      || L ||      || A ||      || S ||      || H ||           PID: " + strconv.Itoa(os.Getpid()))
-	Log.Blue(" _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._         Built: " + Up.BuildTime)
+	Log.Blue(" _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._  _.' `-' '._         Built at: 2022.01.08 20:19:27")
 	Log.Blue("(.-./`-'\\.-.)(.-./`-'\\.-.)(.-./`-'\\.-.)(.-./`-`\\.-.)(.-./`-'\\.-.)")
 	Log.Blue(" `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-'  `-'     `-' ")
-
-	// Auth(true)
-
-	t := getTime()
-	if t == nil {
-		return
-	}
-
-	it, err := strconv.ParseInt(t.Data.T, 10, 64)
-	if err != nil {
-		return
-	}
-
-	//if it > 1641312000000 {
-	if it > 1640429981000 {
-		Log.WithTag("[HUB]").Warn("Clash 授权已到期")
-		time.Sleep(time.Minute)
-		return
-	}
 
 	maxprocs.Set(maxprocs.Logger(func(string, ...interface{}) {}))
 	if version {
