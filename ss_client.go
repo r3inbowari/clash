@@ -6,9 +6,9 @@ import (
 	"io"
 	"net"
 
-	"github.com/Dreamacro/clash/adapter/outbound"
-	"github.com/Dreamacro/clash/constant"
-	"github.com/Dreamacro/clash/listener/socks"
+	"github.com/r3inbowari/clash/adapter/outbound"
+	"github.com/r3inbowari/clash/constant"
+	"github.com/r3inbowari/clash/listener/socks"
 )
 
 type VPNOptions struct {

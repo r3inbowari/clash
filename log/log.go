@@ -2,7 +2,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/Dreamacro/clash/common/observable"
+	"github.com/r3inbowari/clash/common/observable"
 	. "github.com/r3inbowari/zlog"
 	log "github.com/sirupsen/logrus"
 	"os"

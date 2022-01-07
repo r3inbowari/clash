@@ -1,209 +1,62 @@
 package main
 
 import (
+	"github.com/r3inbowari/clash/adapter/outbound"
+	"github.com/r3inbowari/common"
+	"io"
+	"net"
 	"testing"
 	"time"
-
-	"github.com/Dreamacro/clash/adapter/outbound"
-
-	"github.com/docker/docker/api/types/container"
-	"github.com/stretchr/testify/assert"
 )
 
-func TestClash_Shadowsocks(t *testing.T) {
-	cfg := &container.Config{
-		Image:        ImageShadowsocksRust,
-		Entrypoint:   []string{"ssserver"},
-		Cmd:          []string{"-s", "0.0.0.0:10002", "-m", "chacha20-ietf-poly1305", "-k", "FzcLbKs2dY9mhL", "-U"},
-		ExposedPorts: defaultExposedPorts,
-	}
-	hostCfg := &container.HostConfig{
-		PortBindings: defaultPortBindings,
-	}
-
-	id, err := startContainer(cfg, hostCfg, "ss")
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
-
-	t.Cleanup(func() {
-		cleanContainer(id)
+func TestName(t *testing.T) {
+	ss, err := InitSSClient(common.VPNOptions{
+		ShadowSocksOption: outbound.ShadowSocksOption{
+			BasicOption: outbound.BasicOption{},
+			Name:        "home",
+			Server:      "invenleey.oicp.net",
+			Port:        26185,
+			Password:    "159463",
+			Cipher:      "chacha20-ietf-poly1305",
+			UDP:         false,
+		},
+		Addr: "127.0.0.1:6666",
 	})
 
-	proxy, err := outbound.NewShadowSocks(outbound.ShadowSocksOption{
-		Name:     "ss",
-		Server:   localIP.String(),
-		Port:     10002,
-		Password: "FzcLbKs2dY9mhL",
-		Cipher:   "chacha20-ietf-poly1305",
-		UDP:      true,
-	})
 	if err != nil {
-		assert.FailNow(t, err.Error())
+		println(err.Error())
 	}
 
-	time.Sleep(waitTime)
-	testSuit(t, proxy)
+	go ss.Start()
+	time.Sleep(time.Second * 2)
+
+	go func() {
+		common.InitMySqlByProxy(common.DBProxyOptions{
+			User:   "root",
+			Pwd:    "15598870762",
+			Url:    "192.168.5.237",
+			Port:   "3306",
+			Schema: "hello",
+			Socks:  "127.0.0.1:6666",
+		})
+	}()
+
+	go func() {
+		var res common.TaobaoBody
+		common.RequestJson(common.RequestOptions{Url: "https://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp", Client: *common.RegisterHttpProxy(common.HttpProxyOptions{
+			Socks:     "127.0.0.1:6666",
+			SocksAuth: nil,
+		})}, &res)
+
+		println(res.Data.T)
+	}()
+
+	time.Sleep(time.Second * 4)
+
+	ss.Close()
 }
 
-func TestClash_ShadowsocksObfsHTTP(t *testing.T) {
-	cfg := &container.Config{
-		Image: ImageShadowsocks,
-		Env: []string{
-			"SS_MODULE=ss-server",
-			"SS_CONFIG=-s 0.0.0.0 -u -p 10002 -m chacha20-ietf-poly1305 -k FzcLbKs2dY9mhL --plugin obfs-server --plugin-opts obfs=http",
-		},
-		ExposedPorts: defaultExposedPorts,
-	}
-	hostCfg := &container.HostConfig{
-		PortBindings: defaultPortBindings,
-	}
-
-	id, err := startContainer(cfg, hostCfg, "ss-obfs-http")
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
-
-	t.Cleanup(func() {
-		cleanContainer(id)
-	})
-
-	proxy, err := outbound.NewShadowSocks(outbound.ShadowSocksOption{
-		Name:     "ss",
-		Server:   localIP.String(),
-		Port:     10002,
-		Password: "FzcLbKs2dY9mhL",
-		Cipher:   "chacha20-ietf-poly1305",
-		UDP:      true,
-		Plugin:   "obfs",
-		PluginOpts: map[string]interface{}{
-			"mode": "http",
-		},
-	})
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
-
-	time.Sleep(waitTime)
-	testSuit(t, proxy)
-}
-
-func TestClash_ShadowsocksObfsTLS(t *testing.T) {
-	cfg := &container.Config{
-		Image: ImageShadowsocks,
-		Env: []string{
-			"SS_MODULE=ss-server",
-			"SS_CONFIG=-s 0.0.0.0 -u -p 10002 -m chacha20-ietf-poly1305 -k FzcLbKs2dY9mhL --plugin obfs-server --plugin-opts obfs=tls",
-		},
-		ExposedPorts: defaultExposedPorts,
-	}
-	hostCfg := &container.HostConfig{
-		PortBindings: defaultPortBindings,
-	}
-
-	id, err := startContainer(cfg, hostCfg, "ss-obfs-tls")
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
-
-	t.Cleanup(func() {
-		cleanContainer(id)
-	})
-
-	proxy, err := outbound.NewShadowSocks(outbound.ShadowSocksOption{
-		Name:     "ss",
-		Server:   localIP.String(),
-		Port:     10002,
-		Password: "FzcLbKs2dY9mhL",
-		Cipher:   "chacha20-ietf-poly1305",
-		UDP:      true,
-		Plugin:   "obfs",
-		PluginOpts: map[string]interface{}{
-			"mode": "tls",
-		},
-	})
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
-
-	time.Sleep(waitTime)
-	testSuit(t, proxy)
-}
-
-func TestClash_ShadowsocksV2RayPlugin(t *testing.T) {
-	cfg := &container.Config{
-		Image: ImageShadowsocks,
-		Env: []string{
-			"SS_MODULE=ss-server",
-			"SS_CONFIG=-s 0.0.0.0 -u -p 10002 -m chacha20-ietf-poly1305 -k FzcLbKs2dY9mhL --plugin v2ray-plugin --plugin-opts=server",
-		},
-		ExposedPorts: defaultExposedPorts,
-	}
-	hostCfg := &container.HostConfig{
-		PortBindings: defaultPortBindings,
-	}
-
-	id, err := startContainer(cfg, hostCfg, "ss-v2ray-plugin")
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
-
-	t.Cleanup(func() {
-		cleanContainer(id)
-	})
-
-	proxy, err := outbound.NewShadowSocks(outbound.ShadowSocksOption{
-		Name:     "ss",
-		Server:   localIP.String(),
-		Port:     10002,
-		Password: "FzcLbKs2dY9mhL",
-		Cipher:   "chacha20-ietf-poly1305",
-		UDP:      true,
-		Plugin:   "v2ray-plugin",
-		PluginOpts: map[string]interface{}{
-			"mode": "websocket",
-		},
-	})
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
-
-	time.Sleep(waitTime)
-	testSuit(t, proxy)
-}
-
-func Benchmark_Shadowsocks(b *testing.B) {
-	cfg := &container.Config{
-		Image:        ImageShadowsocksRust,
-		Entrypoint:   []string{"ssserver"},
-		Cmd:          []string{"-s", "0.0.0.0:10002", "-m", "aes-256-gcm", "-k", "FzcLbKs2dY9mhL", "-U"},
-		ExposedPorts: defaultExposedPorts,
-	}
-	hostCfg := &container.HostConfig{
-		PortBindings: defaultPortBindings,
-	}
-
-	id, err := startContainer(cfg, hostCfg, "ss")
-	if err != nil {
-		assert.FailNow(b, err.Error())
-	}
-
-	b.Cleanup(func() {
-		cleanContainer(id)
-	})
-
-	proxy, err := outbound.NewShadowSocks(outbound.ShadowSocksOption{
-		Name:     "ss",
-		Server:   localIP.String(),
-		Port:     10002,
-		Password: "FzcLbKs2dY9mhL",
-		Cipher:   "aes-256-gcm",
-		UDP:      true,
-	})
-	if err != nil {
-		assert.FailNow(b, err.Error())
-	}
-
-	time.Sleep(waitTime)
-	benchmarkProxy(b, proxy)
+func relay(l, r net.Conn) {
+	go io.Copy(l, r)
+	io.Copy(r, l)
 }

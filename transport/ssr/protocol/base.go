@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Dreamacro/clash/common/pool"
-	"github.com/Dreamacro/clash/log"
+	"github.com/r3inbowari/clash/common/pool"
+	"github.com/r3inbowari/clash/log"
 
 	"github.com/Dreamacro/go-shadowsocks2/core"
 )

@@ -3,7 +3,7 @@ package tproxy
 import (
 	"net"
 
-	"github.com/Dreamacro/clash/common/pool"
+	"github.com/r3inbowari/clash/common/pool"
 )
 
 type packet struct {

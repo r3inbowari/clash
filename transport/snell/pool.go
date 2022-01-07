@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/Dreamacro/clash/component/pool"
+	"github.com/r3inbowari/clash/component/pool"
 
 	"github.com/Dreamacro/go-shadowsocks2/shadowaead"
 )

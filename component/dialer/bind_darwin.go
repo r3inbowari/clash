@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/Dreamacro/clash/component/iface"
+	"github.com/r3inbowari/clash/component/iface"
 )
 
 type controlFn = func(network, address string, c syscall.RawConn) error

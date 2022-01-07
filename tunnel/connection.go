@@ -6,10 +6,10 @@ import (
 	"net"
 	"time"
 
-	N "github.com/Dreamacro/clash/common/net"
-	"github.com/Dreamacro/clash/common/pool"
-	"github.com/Dreamacro/clash/component/resolver"
-	C "github.com/Dreamacro/clash/constant"
+	N "github.com/r3inbowari/clash/common/net"
+	"github.com/r3inbowari/clash/common/pool"
+	"github.com/r3inbowari/clash/component/resolver"
+	C "github.com/r3inbowari/clash/constant"
 )
 
 func handleUDPToRemote(packet C.UDPPacket, pc C.PacketConn, metadata *C.Metadata) error {
