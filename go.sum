@@ -1,4 +1,3 @@
-github.com/Dreamacro/clash v1.9.0/go.mod h1:vOzDB9KKD/PirNdSlsH4soMl1xF5lk8SwNQiVY5UacE=
 github.com/Dreamacro/go-shadowsocks2 v0.1.7 h1:8CtbE1HoPPMfrQZGXmlluq6dO2lL31W6WRRE8fabc4Q=
 github.com/Dreamacro/go-shadowsocks2 v0.1.7/go.mod h1:8p5G4cAj5ZlXwUR+Ww63gfSikr8kvw8uw3TDwLAJpUc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -103,8 +102,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/r3inbowari/common v0.1.1/go.mod h1:E/fJ/kWXs2GXHdEmUrWPjumH7FlXYcR1djwIZiv8pNk=
-github.com/r3inbowari/common v1.0.1 h1:kQ3yVZ69/hgXDr5U38IrNsTICWlB8fFr2V8hke6+2mg=
-github.com/r3inbowari/common v1.0.1/go.mod h1:BqaH2RD4cDU9yIRQwKf/Le5ZMIB3pAtpr0gu7JeQgBg=
+github.com/r3inbowari/common v1.0.2 h1:hh4ab3W5EB3vmuTZ5pJaP1f3lGdlqKd40ptC0zeYO00=
+github.com/r3inbowari/common v1.0.2/go.mod h1:zb32v/GKvrm6VCwRb5qyNr3l1OGUFncbDwq7i+o2v/c=
 github.com/r3inbowari/zlog v0.1.7 h1:bgQ6tr5uRTdlP4yCe3VH7kG46OlsNn046Zu2KeL21fU=
 github.com/r3inbowari/zlog v0.1.7/go.mod h1:zoIHpfGhl1QXSasA+jCRZOHQ+BoMRKmeY+/iLE9hEIo=
 github.com/sirupsen/logrus v1.8.1 h1:dJKuHgqk1NNQlqoA6BTlM1Wf9DOH3NBjQyu0h9+AZZE=
