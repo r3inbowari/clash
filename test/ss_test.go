@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/r3inbowari/clash/adapter/outbound"
+	"github.com/r3inbowari/clash/client"
 	"github.com/r3inbowari/common"
 	"io"
 	"net"
@@ -10,7 +11,7 @@ import (
 )
 
 func TestName(t *testing.T) {
-	ss, err := InitSSClient(common.VPNOptions{
+	ss, err := client.InitSSClient(client.VPNOptions{
 		ShadowSocksOption: outbound.ShadowSocksOption{
 			BasicOption: outbound.BasicOption{},
 			Name:        "home",
